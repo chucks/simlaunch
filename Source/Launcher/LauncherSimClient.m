@@ -139,10 +139,9 @@
 
     if ([config respondsToSelector: @selector(setSimulatedDeviceFamily:)]) {
         /* Prefer iPad over iPhone, but only if we know it will work. */
-        // TODO: Make configurable.
-        if (sdk != nil &&
-            [_app.deviceFamilies containsObject: [PLSimulatorDeviceFamily ipadFamily]] && 
-            [sdk.deviceFamilies containsObject: [PLSimulatorDeviceFamily ipadFamily]]) 
+		/* or, if the app only works on the iPad, always use the iPad, even if it might fail */
+        if ((sdk && [_app.deviceFamilies containsObject: [PLSimulatorDeviceFamily ipadFamily]] && (!sdk || [sdk.deviceFamilies containsObject: [PLSimulatorDeviceFamily ipadFamily]]))
+			|| ([_app.deviceFamilies containsObject:[PLSimulatorDeviceFamily ipadFamily]] && [_app.deviceFamilies count] == 1)) 
         {
             [config setSimulatedDeviceFamily: [NSNumber numberWithInt: DTiPhoneSimulatoriPadFamily]]; 
         } else {

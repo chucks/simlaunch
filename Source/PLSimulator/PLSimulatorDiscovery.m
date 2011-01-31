@@ -28,6 +28,19 @@
 
 #import "PLSimulatorDiscovery.h"
 
+@implementation NSArray (Reverse)
+
+- (NSArray *)reversedArray {
+    NSMutableArray *array = [NSMutableArray arrayWithCapacity:[self count]];
+    NSEnumerator *enumerator = [self reverseObjectEnumerator];
+    for (id element in enumerator) {
+        [array addObject:element];
+    }
+    return array;
+}
+
+@end
+
 @interface PLSimulatorDiscovery (PrivateMethods)
 - (void) queryFinished: (NSNotification *) notification;
 @end
@@ -156,6 +169,7 @@ static NSInteger platform_compare_by_version (id obj1, id obj2, void *context) {
      * and supported device families. */
     NSArray *results = [_query results];
     NSMutableArray *platformSDKs = [NSMutableArray arrayWithCapacity: [results count]];
+	NSMutableArray *overMin = [NSMutableArray arrayWithCapacity: [results count]];
 
     for (NSMetadataItem *item in results) {
         PLSimulatorPlatform *platform;
@@ -198,16 +212,36 @@ static NSInteger platform_compare_by_version (id obj1, id obj2, void *context) {
                 }
             }
         }
+		
+		if (hasMinVersion && hasDeviceFamily) {
+			[overMin addObject:platform];
+		}
 
         if (!hasMinVersion || !hasDeviceFamily || !hasExpectedSDK)
             continue;
 
         [platformSDKs addObject: platform];
     }
+	
+	
+	
+	NSArray *sorted = nil;
+	
+	// if there's no SDK that's an exact version match, use any that are over the min version.
+	// in that case, sort to use the newest possible version
+	if ([platformSDKs count] == 0 && [overMin count] > 0) {
+		NSMutableArray *a = [NSMutableArray arrayWithCapacity:[overMin count]];
 
-    /* Sort by version, try to choose the most stable SDK of the available set. */
-    NSArray *sorted = [platformSDKs sortedArrayUsingFunction: platform_compare_by_version context: nil];
-    
+		NSEnumerator *enumerator = [[overMin sortedArrayUsingFunction: platform_compare_by_version context: nil] reverseObjectEnumerator];
+		for (id element in enumerator) {
+			[a addObject:element];
+		}
+		sorted = a;
+	} else {
+		/* Sort by version, try to choose the most stable SDK of the available set. */
+		sorted = [platformSDKs sortedArrayUsingFunction: platform_compare_by_version context: nil];
+    }
+	
     /* Inform the delegate */
     [_delegate simulatorDiscovery: self didFindMatchingSimulatorPlatforms: sorted];
 }
