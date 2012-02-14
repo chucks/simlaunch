@@ -47,13 +47,16 @@
  *
  * @param platform Platform to use for launching.
  * @param app Application to be launched.
+ * @param deviceFamily Preferred device family in case of universal apps where the user wants to explicitly launch as
+ * iPhone or iPad.  Pass nil to have a device family automatically selected.
  */
-- (id) initWithPlatform: (PLSimulatorPlatform *) platform app: (PLSimulatorApplication *) app {
+- (id) initWithPlatform: (PLSimulatorPlatform *) platform app: (PLSimulatorApplication *) app preferredDeviceFamily: (PLSimulatorDeviceFamily *) deviceFamily {
     if ((self = [super init]) == nil)
         return nil;
     
     _platform = platform;
     _app = app;
+    _preferredDeviceFamily = deviceFamily;
 
     return self;
 }
@@ -138,14 +141,27 @@
     [config setSimulatedApplicationLaunchEnvironment: [NSDictionary dictionary]];
 
     if ([config respondsToSelector: @selector(setSimulatedDeviceFamily:)]) {
+        BOOL deviceFamilyConfigured = NO;
+        /* allow for explicitly chosen device family.  Use it even if it might fail */
+        if(_preferredDeviceFamily != nil ) {
+            if (_preferredDeviceFamily == [PLSimulatorDeviceFamily ipadFamily]) {
+                [config setSimulatedDeviceFamily: [NSNumber numberWithInt: DTiPhoneSimulatoriPadFamily]]; 
+            } else {
+                [config setSimulatedDeviceFamily: [NSNumber numberWithInt: DTiPhoneSimulatoriPhoneFamily]];                
+            }
+            deviceFamilyConfigured = YES;
+        }
+        
         /* Prefer iPad over iPhone, but only if we know it will work. */
 		/* or, if the app only works on the iPad, always use the iPad, even if it might fail */
-        if ((sdk && [_app.deviceFamilies containsObject: [PLSimulatorDeviceFamily ipadFamily]] && (!sdk || [sdk.deviceFamilies containsObject: [PLSimulatorDeviceFamily ipadFamily]]))
-			|| ([_app.deviceFamilies containsObject:[PLSimulatorDeviceFamily ipadFamily]] && [_app.deviceFamilies count] == 1)) 
-        {
-            [config setSimulatedDeviceFamily: [NSNumber numberWithInt: DTiPhoneSimulatoriPadFamily]]; 
-        } else {
-            [config setSimulatedDeviceFamily: [NSNumber numberWithInt: DTiPhoneSimulatoriPhoneFamily]];
+        if(!deviceFamilyConfigured) {
+            if ((sdk && [_app.deviceFamilies containsObject: [PLSimulatorDeviceFamily ipadFamily]] && (!sdk || [sdk.deviceFamilies containsObject: [PLSimulatorDeviceFamily ipadFamily]]))
+                || ([_app.deviceFamilies containsObject:[PLSimulatorDeviceFamily ipadFamily]] && [_app.deviceFamilies count] == 1)) 
+            {
+                [config setSimulatedDeviceFamily: [NSNumber numberWithInt: DTiPhoneSimulatoriPadFamily]]; 
+            } else {
+                [config setSimulatedDeviceFamily: [NSNumber numberWithInt: DTiPhoneSimulatoriPhoneFamily]];
+            }            
         }
     }
     

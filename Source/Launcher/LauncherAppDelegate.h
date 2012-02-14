@@ -37,6 +37,9 @@
 
     /** Embedded app meta-data */
     PLSimulatorApplication *_app;
+    
+    /** preferred device family to use in case of a universal app */
+    PLSimulatorDeviceFamily *_preferredDeviceFamily;
 }
 
 @end

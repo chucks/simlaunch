@@ -79,6 +79,34 @@
         [[NSApplication sharedApplication] terminate: self];
         return;
     }
+    
+    /* if the app supports both iPhone and iPad, first check info.plist to see if a default device family
+       was written in by the bundler.  If not, then prompt for whether to run as iPhone or iPad */
+    if ([_app.deviceFamilies count] > 1 ) {
+        NSDictionary *infoPlist = [[NSBundle mainBundle] infoDictionary];
+        id obj = [infoPlist objectForKey:@"PLDefaultUIDeviceFamily"];
+        if(obj != nil && [obj respondsToSelector:@selector(intValue)]) {
+            _preferredDeviceFamily = [PLSimulatorDeviceFamily deviceFamilyForDeviceCode:[obj intValue]];
+        }
+        
+        /* no device family found in info.plist, prompt the user which one to use */
+        if( _preferredDeviceFamily == nil ) {
+            NSString *infoFmt = NSLocalizedString(@"This app can run on either iPhone or iPad.  Select a device to use.", 
+                                                  @"Device Selection for universal apps");
+            
+            NSAlert *alert = [NSAlert alertWithMessageText: NSLocalizedString(@"Select device to use.", @"Select device to use")
+                                             defaultButton: NSLocalizedString(@"Use iPhone", @"iPhone button")
+                                           alternateButton: NSLocalizedString(@"Use iPad", @"iPad button")
+                                               otherButton: nil
+                                 informativeTextWithFormat: infoFmt, _app.canonicalSDKName];
+            NSInteger ret = [alert runModal];
+            if(NSAlertDefaultReturn == ret ) {
+                _preferredDeviceFamily = [PLSimulatorDeviceFamily iphoneFamily];
+            } else {
+                _preferredDeviceFamily = [PLSimulatorDeviceFamily ipadFamily];
+            }            
+        }
+    }    
 
     /* Find the matching platform SDKs. We don't care about version, but do care about the SDK the 
      * app was built with and the device families it requires/supports */
@@ -108,7 +136,7 @@
     }
 
     /* Launch with the discovery-preferred platform */
-    LauncherSimClient *client = [[LauncherSimClient alloc] initWithPlatform: [platforms objectAtIndex: 0] app: _app];
+    LauncherSimClient *client = [[LauncherSimClient alloc] initWithPlatform: [platforms objectAtIndex: 0] app: _app preferredDeviceFamily:_preferredDeviceFamily];
     [client launch];
 }
 

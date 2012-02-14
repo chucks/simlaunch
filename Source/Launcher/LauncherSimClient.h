@@ -38,9 +38,12 @@
 
     /** Application to be launched. */
     PLSimulatorApplication *_app;
+    
+    /** Preferred Device Family, if specified */
+    PLSimulatorDeviceFamily *_preferredDeviceFamily;
 }
 
-- (id) initWithPlatform: (PLSimulatorPlatform *) platform app: (PLSimulatorApplication *) app;
+- (id) initWithPlatform: (PLSimulatorPlatform *) platform app: (PLSimulatorApplication *) app preferredDeviceFamily: (PLSimulatorDeviceFamily *) deviceFamily;
 
 - (void) launch;
 
