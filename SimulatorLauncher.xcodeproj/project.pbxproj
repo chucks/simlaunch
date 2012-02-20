@@ -1213,6 +1213,10 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				INFOPLIST_FILE = "Resources/Launcher/Launcher-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
+				OTHER_LDFLAGS = (
+					"-Wl,-rpath",
+					"-Wl,/Applications/Xcode.app/Contents/OtherFrameworks",
+				);
 				PRODUCT_NAME = Launcher;
 			};
 			name = Debug;
@@ -1229,6 +1233,10 @@
 				GCC_MODEL_TUNING = G5;
 				INFOPLIST_FILE = "Resources/Launcher/Launcher-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
+				OTHER_LDFLAGS = (
+					"-Wl,-rpath",
+					"-Wl,/Applications/Xcode.app/Contents/OtherFrameworks",
+				);
 				PRODUCT_NAME = Launcher;
 			};
 			name = Release;
