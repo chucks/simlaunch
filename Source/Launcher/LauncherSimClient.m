@@ -172,7 +172,7 @@
     [session setDelegate: self];
     [session setSimulatedApplicationPID: [NSNumber numberWithInt: 35]];
     
-    if (![session requestStartWithConfig: config timeout: 30.0 error: &error]) {
+    if (![session requestStartWithConfig: config timeout: 60.0 error: &error]) {
         NSLog(@"Could not start simulator session: %@", error);
 
         NSString *text = NSLocalizedString(@"The iPhone Simulator could not be started. If another Simulator application "
@@ -191,7 +191,22 @@
 // from DTiPhoneSimulatorSessionDelegate protocol
 - (void) session: (DTiPhoneSimulatorSession *) session didStart: (BOOL) started withError: (NSError *) error {
     /* If the application starts successfully, we can exit */
-    if (started) {
+    BOOL timeout = NO;
+    
+    if(!started) {
+        if (error.code == 2 && [error.domain isEqualToString:@"DTiPhoneSimulatorErrorDomain"]) {
+            timeout = YES;
+        }
+        
+        if(timeout) {
+            NSLog(@"Simulator session timeout, now showing error dialog: %@", error);            
+        } else {
+                NSLog(@"Simulator session did not start: %@", error);
+        }
+    }
+    
+    // treat timeouts as soft errors and don't put up a dialog.
+    if (started || timeout) {
         NSLog(@"Did start app %@ successfully, exiting", _app.path);
 
         /* Bring simulator to foreground */
@@ -203,7 +218,6 @@
     }
 
     /* Otherwise, an error occured. Inform the user. */
-    NSLog(@"Simulator session did not start: %@", error);
     NSString *text = NSLocalizedString(@"The iPhone Simulator could not be started. If another Simulator application "
                                        "is currently running, please close the Simulator and try again.", 
                                        @"Simulator error alert info");
