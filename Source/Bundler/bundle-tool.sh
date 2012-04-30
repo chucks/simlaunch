@@ -55,6 +55,7 @@ parse_plist () {
 	APP_NAME=`${PLIST_CMD} -c "Print CFBundleDisplayName" "${PLIST}"`
 	APP_BUNDLE_ID=`${PLIST_CMD} -c "Print CFBundleIdentifier" "${PLIST}"`
 	APP_ICON=`${PLIST_CMD} -c "Print CFBundleIconFile" "${PLIST}"`
+	APP_bUNDLE_VERSION_SHORT=`${PLIST_CMD} -c "Print CFBundleShortVersionString" "${PLIST}"`
 
 	if [ -z "${APP_NAME}" ]; then
 		echo "${APP} is missing a valid CFBundleDisplayName"
@@ -116,6 +117,8 @@ populate_meta_data () {
 	# Set the bundle identifier (original + .launchsim suffix)
 	${PLIST_CMD} -c "Set :CFBundleIdentifier ${APP_BUNDLE_ID}.launchsim" "${wrapper_plist}"
 	check_error "Failed to modify wrapper application's plist" ${DESTINATION_WRITE_FAILED}
+
+	${PLIST_CMD} -c "Set :CFBundleShortVersionString ${APP_bUNDLE_VERSION_SHORT}" "${wrapper_plist}"
 
 	# Convert the embedded application's icon
 	if [ -f "${APP_ICON}" ]; then
